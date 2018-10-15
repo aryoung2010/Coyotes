@@ -10,7 +10,6 @@ output: html_document
 
 ```{r}
 # Reading samples
-setwd("C:/Users/ayoung/Desktop/Duke/Git Repositories/Coyotes-master")
 sample <- read.csv("sample.csv", stringsAsFactors = FALSE)
 sample <- sample[1:55,1:7]
 colnames(sample)[3] <- "gender"
