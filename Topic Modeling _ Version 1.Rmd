@@ -1,0 +1,56 @@
+---
+title: "Topic Modeling"
+author: "Allison Young"
+date: "October 15,2018"
+output: html_document
+---
+
+
+
+
+```{r}
+# Reading samples
+setwd("C:/Users/ayoung/Desktop/Duke/Git Repositories/Coyotes-master")
+sample <- read.csv("sample.csv", stringsAsFactors = FALSE)
+sample <- sample[1:55,1:7]
+colnames(sample)[3] <- "gender"
+colnames(sample)[4] <- "LGBTQ"
+colnames(sample)[5] <- "birth"
+colnames(sample)[6] <- "zip"
+colnames(sample)[7] <- "published"
+
+library(tm)
+sample_corpus <- Corpus(VectorSource(as.vector(sample$Story)))
+sample_corpus <- tm_map(sample_corpus, removeWords, stopwords("english"))
+sample_corpus <- tm_map(sample_corpus, content_transformer(removeNumbers))
+sample_corpus <- tm_map(sample_corpus, content_transformer(removePunctuation))
+sample_corpus <- tm_map(sample_corpus, content_transformer(tolower))
+sample_corpus <- tm_map(sample_corpus, content_transformer(stemDocument), language = "english")
+
+DTM <- DocumentTermMatrix(sample_corpus, control = list(wordLengths = c(2, Inf)))
+
+library(topicmodels)
+topic_model<-LDA(DTM, k=10, control = list(seed = 321))
+
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+
+topics <- tidy(topic_model, matrix = "beta")
+
+top_terms <-
+ topics %>%
+ group_by(topic) %>%
+ top_n(10, beta) %>%
+ ungroup() %>%
+ arrange(topic, -beta)
+
+
+top_terms %>%
+ mutate(term = reorder(term, beta)) %>%
+ ggplot(aes(term, beta, fill = factor(topic))) +
+ geom_col(show.legend = FALSE) +
+ facet_wrap(~ topic, scales = "free") +
+ coord_flip()
+```
+
