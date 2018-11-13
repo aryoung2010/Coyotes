@@ -11,24 +11,314 @@ library(tabplot)
 library(ggplot2)
 ```
 
-
+### LOADING ALL DATA
 ```{r}
 # Reading samples
-setwd("C:/Users/ayoung/Desktop/Duke/Git Repositories/Coyotes-master")
-corpus1 <- read.csv("Shifted Col Names_ LWC Analysis.csv", stringsAsFactors = FALSE)
+corpus1 <- read.csv("cleaned_data.csv", stringsAsFactors = FALSE)
 
 names(corpus1)
 summary(corpus1)
+
+```
+
+### ALL STORIES
+```{r}
+library(tm)
+topics_corpus <- Corpus(VectorSource(as.vector(corpus1$Story)))
+topics_corpus <- tm_map(topics_corpus, removeWords, stopwords("english"))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removeNumbers))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removePunctuation))
+topics_corpus <- tm_map(topics_corpus, content_transformer(tolower))
+topics_corpus <- tm_map(topics_corpus, content_transformer(stemDocument), language = "english")
+
+DTM <- DocumentTermMatrix(topics_corpus, control = list(wordLengths = c(2, Inf)))
+
+
+rowTotals <- apply(DTM, 1, sum) #Find the sum of words in each Document
+DTM_cc  <- DTM[rowTotals> 0, ]  
+
+#remove all docs without words
+library(topicmodels)
+topic_model<-LDA(DTM_cc, k=10, control = list(seed = 321))
+
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+
+topics <- tidy(topic_model, matrix = "beta")
+
+top_terms <-
+ topics %>%
+ group_by(topic) %>%
+ top_n(10, beta) %>%
+ ungroup() %>%
+ arrange(topic, -beta)
+
+
+top_terms %>%
+ mutate(term = reorder(term, beta)) %>%
+ ggplot(aes(term, beta, fill = factor(topic))) +
+ geom_col(show.legend = FALSE) +
+ facet_wrap(~ topic, scales = "free") +
+ coord_flip()
+```
+## DIVIDE STORIES BY SUBJECT
+```{r}
+
+relationships <- subset(corpus1, Subject == "relationships")
+relationships[1:50,5]
+
+puberty <- subset(corpus1, Subject == "puberty")
+puberty[1:50,5]
+
+bullying <- subset(corpus1, Subject == "bullying")
+bullying[1:50,5]
+
+female<- subset(corpus1, Gender == "female" |Gender=="Female")
+female[1:50,10]
+
+male <- subset(corpus1, Gender == "male"| Gender =="Male")
+male[1:50,10]
+
+#other<- subset(corpus1, Gender == "other"| Gender == "Other")
+#other[1:50,10]
+```
+
+
+
+
+### RELATIONSHIP STORY TOPIC MODELING
+```{r}
+library(tm)
+topics_corpus <- Corpus(VectorSource(as.vector(relationships$Story)))
+topics_corpus <- tm_map(topics_corpus, removeWords, stopwords("english"))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removeNumbers))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removePunctuation))
+topics_corpus <- tm_map(topics_corpus, content_transformer(tolower))
+topics_corpus <- tm_map(topics_corpus, content_transformer(stemDocument), language = "english")
+
+DTM <- DocumentTermMatrix(topics_corpus, control = list(wordLengths = c(2, Inf)))
+
+
+rowTotals <- apply(DTM, 1, sum) #Find the sum of words in each Document
+DTM_cc  <- DTM[rowTotals> 0, ]  
+
+#remove all docs without words
+library(topicmodels)
+topic_model<-LDA(DTM_cc, k=10, control = list(seed = 321))
+
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+
+topics <- tidy(topic_model, matrix = "beta")
+
+top_terms <-
+ topics %>%
+ group_by(topic) %>%
+ top_n(10, beta) %>%
+ ungroup() %>%
+ arrange(topic, -beta)
+
+
+top_terms %>%
+ mutate(term = reorder(term, beta)) %>%
+ ggplot(aes(term, beta, fill = factor(topic))) +
+ geom_col(show.legend = FALSE) +
+ facet_wrap(~ topic, scales = "free") +
+ coord_flip()
+```
+
+## PUBERTY TOPIC MODELING
+
+```{r}
+library(tm)
+topics_corpus <- Corpus(VectorSource(as.vector(puberty$Story)))
+topics_corpus <- tm_map(topics_corpus, removeWords, stopwords("english"))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removeNumbers))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removePunctuation))
+topics_corpus <- tm_map(topics_corpus, content_transformer(tolower))
+topics_corpus <- tm_map(topics_corpus, content_transformer(stemDocument), language = "english")
+
+DTM <- DocumentTermMatrix(topics_corpus, control = list(wordLengths = c(2, Inf)))
+
+
+rowTotals <- apply(DTM, 1, sum) #Find the sum of words in each Document
+DTM_cc  <- DTM[rowTotals> 0, ]  
+
+#remove all docs without words
+library(topicmodels)
+topic_model<-LDA(DTM_cc, k=10, control = list(seed = 321))
+
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+
+topics <- tidy(topic_model, matrix = "beta")
+
+top_terms <-
+ topics %>%
+ group_by(topic) %>%
+ top_n(10, beta) %>%
+ ungroup() %>%
+ arrange(topic, -beta)
+
+
+top_terms %>%
+ mutate(term = reorder(term, beta)) %>%
+ ggplot(aes(term, beta, fill = factor(topic))) +
+ geom_col(show.legend = FALSE) +
+ facet_wrap(~ topic, scales = "free") +
+ coord_flip()
+```
+## BULLYING TOPIC MODELING
+```{r}
+library(tm)
+topics_corpus <- Corpus(VectorSource(as.vector(bullying$Story)))
+topics_corpus <- tm_map(topics_corpus, removeWords, stopwords("english"))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removeNumbers))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removePunctuation))
+topics_corpus <- tm_map(topics_corpus, content_transformer(tolower))
+topics_corpus <- tm_map(topics_corpus, content_transformer(stemDocument), language = "english")
+
+DTM <- DocumentTermMatrix(topics_corpus, control = list(wordLengths = c(2, Inf)))
+
+
+rowTotals <- apply(DTM, 1, sum) #Find the sum of words in each Document
+DTM_cc  <- DTM[rowTotals> 0, ]  
+
+#remove all docs without words
+library(topicmodels)
+topic_model<-LDA(DTM_cc, k=10, control = list(seed = 321))
+
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+
+topics <- tidy(topic_model, matrix = "beta")
+
+top_terms <-
+ topics %>%
+ group_by(topic) %>%
+ top_n(10, beta) %>%
+ ungroup() %>%
+ arrange(topic, -beta)
+
+
+top_terms %>%
+ mutate(term = reorder(term, beta)) %>%
+ ggplot(aes(term, beta, fill = factor(topic))) +
+ geom_col(show.legend = FALSE) +
+ facet_wrap(~ topic, scales = "free") +
+ coord_flip()
+```
+
+## MALE STORY TOPIC MODELING
+```{r}
+library(tm)
+topics_corpus <- Corpus(VectorSource(as.vector(male$Story)))
+topics_corpus <- tm_map(topics_corpus, removeWords, stopwords("english"))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removeNumbers))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removePunctuation))
+topics_corpus <- tm_map(topics_corpus, content_transformer(tolower))
+topics_corpus <- tm_map(topics_corpus, content_transformer(stemDocument), language = "english")
+
+DTM <- DocumentTermMatrix(topics_corpus, control = list(wordLengths = c(2, Inf)))
+
+
+rowTotals <- apply(DTM, 1, sum) #Find the sum of words in each Document
+DTM_cc  <- DTM[rowTotals> 0, ]  
+
+#remove all docs without words
+library(topicmodels)
+topic_model<-LDA(DTM_cc, k=10, control = list(seed = 321))
+
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+
+topics <- tidy(topic_model, matrix = "beta")
+
+top_terms <-
+ topics %>%
+ group_by(topic) %>%
+ top_n(10, beta) %>%
+ ungroup() %>%
+ arrange(topic, -beta)
+
+
+top_terms %>%
+ mutate(term = reorder(term, beta)) %>%
+ ggplot(aes(term, beta, fill = factor(topic))) +
+ geom_col(show.legend = FALSE) +
+ facet_wrap(~ topic, scales = "free") +
+ coord_flip()
+```
+
+##  FEMALE STORY TOPIC MODELING
+```{r}
+library(tm)
+topics_corpus <- Corpus(VectorSource(as.vector(female$Story)))
+topics_corpus <- tm_map(topics_corpus, removeWords, stopwords("english"))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removeNumbers))
+topics_corpus <- tm_map(topics_corpus, content_transformer(removePunctuation))
+topics_corpus <- tm_map(topics_corpus, content_transformer(tolower))
+topics_corpus <- tm_map(topics_corpus, content_transformer(stemDocument), language = "english")
+
+DTM <- DocumentTermMatrix(topics_corpus, control = list(wordLengths = c(2, Inf)))
+
+
+rowTotals <- apply(DTM, 1, sum) #Find the sum of words in each Document
+DTM_cc  <- DTM[rowTotals> 0, ]  
+
+#remove all docs without words
+library(topicmodels)
+topic_model<-LDA(DTM_cc, k=10, control = list(seed = 321))
+
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+
+topics <- tidy(topic_model, matrix = "beta")
+
+top_terms <-
+ topics %>%
+ group_by(topic) %>%
+ top_n(10, beta) %>%
+ ungroup() %>%
+ arrange(topic, -beta)
+
+
+top_terms %>%
+ mutate(term = reorder(term, beta)) %>%
+ ggplot(aes(term, beta, fill = factor(topic))) +
+ geom_col(show.legend = FALSE) +
+ facet_wrap(~ topic, scales = "free") +
+ coord_flip()
+```
+
+## PSYCHOMETRICS ALL DATA
+
+```{r}
+liwccorpus1 <- read.csv("LIWC2015 Results (cleaned_data).csv", stringsAsFactors = FALSE)
+
+names(liwccorpus1)
+summary(liwccorpus1)
 
 #chart of sum
 #chart of mean
 #chart of min 
 #chart of max
-
-psychometrics <- corpus1[c(1,20:112)]
+library(tabplot)
+library(ggplot2)
+psychometrics <- liwccorpus1[c(1,20:112)]
 summary(psychometrics)
 dim(psychometrics)
+names(psychometrics)
+```
 
+## WORD COUNT
+```{r}
 require(ggplot2)
 #names(psychometrics)
 #tableplot(psychometrics[2:10],sortCol= WC, nBins=27)
@@ -49,6 +339,21 @@ tableplot(psychometrics[c(2,83:94)],sortCol= WC, nBins=27, title = "Punctuation"
 
 ```
 
+#TONE
+```{r}
+tableplot(psychometrics[c(6,34:36)],sortCol= Tone, nBins=27, title = "Emotions") # emotions
+tableplot(psychometrics[c(6,37:41)],sortCol= Tone, nBins=27, title = "Social") # social
+tableplot(psychometrics[c(6,42:48)],sortCol= Tone, nBins=27, title = "Cognitive") # cognitive
+tableplot(psychometrics[c(6,49:52)],sortCol= Tone, nBins=27, title = "Senses") # senses
+tableplot(psychometrics[c(6,53:56)],sortCol= Tone, nBins=27, title = "Human Body") # body
+tableplot(psychometrics[c(6,57:63)],sortCol= Tone, nBins=27, title = "Motivation") # motivation
+tableplot(psychometrics[c(6,64:66)],sortCol= Tone, nBins=27, title = "Temporal Focus") # temporal focus
+tableplot(psychometrics[c(6,67:70)],sortCol= Tone, nBins=27, title = "Space/Time Ref") # referential
+tableplot(psychometrics[c(6,71:76)],sortCol= Tone, nBins=27, title = "Topics of Life") # life topics
+tableplot(psychometrics[c(6,77:82)],sortCol= Tone, nBins=27, title = "Types of Language") # types of lang
+tableplot(psychometrics[c(6,83:94)],sortCol= Tone, nBins=27, title = "Punctuation") # punctuation
+
+```
 
 
 ```{r}
@@ -86,4 +391,5 @@ top_terms %>%
  facet_wrap(~ topic, scales = "free") +
  coord_flip()
 ```
+
 
